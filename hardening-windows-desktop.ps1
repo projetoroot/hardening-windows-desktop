@@ -32,7 +32,8 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # LOG AUTOMATICO - Sempre cria C:\temp\hardening_completo.txt
-New-Item C:\temp -Force | Out-Null
+$path = "C:\temp"
+if (!(Test-Path $path)) { New-Item $path -ItemType Directory }
 $log = "C:\temp\hardening_completo.txt"
 Clear-Host
 Write-Host "Hardening Windows Desktop - 20 ITENS CRITICOS" -ForegroundColor Green
