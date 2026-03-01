@@ -127,4 +127,6 @@ Previne:
 ### Baixar o Script
 
 ```powershell
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/hardening-windows-desktop.ps1 -OutFile hardening-windows-desktop.ps1
+
