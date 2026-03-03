@@ -1,5 +1,5 @@
 ###############################################################################
-# Hardening Microsoft Windows Desktop 10/11 - 20 ITENS - BASELINE MICROSOFT 
+# Hardening Microsoft Windows Desktop 10/11 - 25 ITENS - BASELINE MICROSOFT 
 # Autor: Diego Costa (@diegocostaroot) / Projeto Root (youtube.com/projetoroot)
 # Veja o link: https://wiki.projetoroot.com.br
 # 2026
@@ -36,7 +36,7 @@ $path = "C:\temp"
 if (!(Test-Path $path)) { New-Item $path -ItemType Directory }
 $log = "C:\temp\hardening_completo.txt"
 Clear-Host
-Write-Host "Hardening Windows Desktop - 20 ITENS CRITICOS" -ForegroundColor Green
+Write-Host "Hardening Windows Desktop - 25 ITENS CRITICOS" -ForegroundColor Green
 
 # =============================================================================
 # 1. FIREWALL + BLOQUEIO SMB 445 INBOUND
@@ -229,15 +229,117 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\TlntSvr" /v Start /t REG_DWORD /
 "20. Telnet OFF OK" | Out-File $log -Append
 
 # =============================================================================
+# 21. DEFENDER ASR - BLOQUEIO DE EXECUCAO WEB / OFFICE 
+# =============================================================================
+# FINALIDADE: Reduz superficie de ataque bloqueando comportamentos tipicos de malware
+# RISCO: Exploits HTML, LNK e payload Office podem executar codigo sem aviso
+# NOTA: Pode impactar macros e automacoes corporativas
+$asrRules = @(
+"D4F940AB-401B-4EFC-AADC-AD5F3C50688A",
+"75668C1F-73B5-4CF0-BB93-3ECF5CB7CC84",
+"3B576869-A4EC-4529-8536-B80A7769E899"
+)
+
+foreach ($rule in $asrRules) {
+    Add-MpPreference -AttackSurfaceReductionRules_Ids $rule -AttackSurfaceReductionRules_Actions Enabled
+}
+
+"21. ASR aplicado - OK" | Out-File $log -Append
+
+# =============================================================================
+# 22. MARK OF THE WEB FORCADO (SaveZoneInformation=1)
+# =============================================================================
+# FINALIDADE: Garante que arquivos baixados mantenham identificacao de zona Internet
+# RISCO: Sem MOTW, arquivos HTML/LNK podem executar sem restricoes adicionais
+# NOTA: Funciona em conjunto com SmartScreen e ASR
+New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" -Force | Out-Null
+Set-ItemProperty `
+-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" `
+-Name "SaveZoneInformation" `
+-Value 1 -Type DWord
+
+"22. MOTW ativo - OK" | Out-File $log -Append
+
+# =============================================================================
+# 23. SMARTSCREEN REQUIREADMIN
+# =============================================================================
+# FINALIDADE: Obriga validacao administrativa para executaveis nao reconhecidos
+# RISCO: Usuario pode executar malware baixado sem verificacao reputacional
+# NOTA: Pode gerar prompts adicionais em ambientes com software interno
+Set-ItemProperty `
+-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" `
+-Name "SmartScreenEnabled" `
+-Value "RequireAdmin"
+
+"23. SmartScreen forçado - OK" | Out-File $log -Append
+
+# =============================================================================
+# 24. SOFTWARE RESTRICTION POLICY - BLOQUEIO TEMP E DOWNLOADS
+# =============================================================================
+# FINALIDADE: Impede execucao direta de arquivos em diretorios de alto risco
+# RISCO: Malware geralmente executa a partir de Downloads ou AppData\Temp
+# NOTA: Pode bloquear instaladores legitimos executados dessas pastas
+$base = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Safer\CodeIdentifiers"
+
+New-Item -Path $base -Force | Out-Null
+New-ItemProperty -Path $base -Name "DefaultLevel" -Value 0x40000 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path $base -Name "PolicyScope" -Value 0 -PropertyType DWord -Force | Out-Null
+
+$paths = @(
+"$env:USERPROFILE\Downloads\*",
+"$env:USERPROFILE\AppData\Local\Temp\*"
+)
+
+foreach ($p in $paths) {
+    $guid = [guid]::NewGuid().ToString()
+    $rulePath = "$base\0\Paths\$guid"
+    New-Item -Path $rulePath -Force | Out-Null
+    New-ItemProperty -Path $rulePath -Name "ItemData" -Value $p -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $rulePath -Name "SaferFlags" -Value 0 -PropertyType DWord -Force | Out-Null
+}
+
+"24. SRP aplicado - OK" | Out-File $log -Append
+
+# =============================================================================
+# 25. WINDOWS UPDATE AUTOMATICO
+# =============================================================================
+# FINALIDADE: Garante aplicacao automatica de patches de seguranca
+# RISCO: Zero-day permanece exploravel sem atualizacao
+# NOTA: Nao substitui WSUS ou controle corporativo, apenas forca politica ativa
+New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Force | Out-Null
+Set-ItemProperty `
+-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" `
+-Name "NoAutoUpdate" `
+-Value 0 -Type DWord
+
+"25. Windows Update ativo - OK" | Out-File $log -Append
+
+# =============================================================================
 # FINALIZACAO - RELATORIO COMPLETO
 # =============================================================================
-"=== HARDENING CONCLUIDO $(Get-Date) ===" | Out-File $log -Append
-"=== TOTAL: 20/20 ITENS APLICADOS SUCESSO ===" | Out-File $log -Append
-"=== REINICIAR OBRIGATORIO: shutdown /r /t 60 ===" | Out-File $log -Append
-"=== VERIFICAR INTERNET: ping google.com ===" | Out-File $log -Append
 
-Write-Host "`nCONCLUIDO - 20/20 ITENS!" -ForegroundColor Green
-Write-Host "RELATORIO DETALHADO: $log" -ForegroundColor Yellow
-Write-Host "REINICIAR: shutdown /r /t 60" -ForegroundColor Red
+# Mensagens de conclusão
+"=== HARDENING CONCLUIDO $(Get-Date) ===" | Out-File $log -Append
+"=== TOTAL: 25/25 ITENS APLICADOS SUCESSO ===" | Out-File $log -Append
+
+# Testa conectividade com a internet
+Write-Host "`nVerificando internet..." -ForegroundColor Cyan
+if (Test-Connection -ComputerName google.com -Count 2 -Quiet) {
+    Write-Host "Conexão OK" -ForegroundColor Green
+    "$((Get-Date)) - Conexão OK" | Out-File $log -Append
+} else {
+    Write-Host "Sem conexão com a internet" -ForegroundColor Red
+    "$((Get-Date)) - Sem conexão com a internet" | Out-File $log -Append
+}
+
+# Agenda reinício em 60 segundos
+Write-Host "`nReiniciando em 60 segundos..." -ForegroundColor Red
+"$((Get-Date)) - Reinício agendado em 60 segundos" | Out-File $log -Append
+shutdown /r /t 60
+
+# Abre o log no final
 Start-Sleep 3
 notepad $log
+
+Write-Host "`nCONCLUIDO - 25/25 ITENS!" -ForegroundColor Green
+Write-Host "RELATORIO DETALHADO: $log" -ForegroundColor Yellow
