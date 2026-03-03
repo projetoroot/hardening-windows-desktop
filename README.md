@@ -191,6 +191,7 @@ Aplicando os 25 controles:
 
 Este manual permite auditoria técnica e pontuação objetiva do nível de hardening aplicado.
 
+
 ## 🚀 Como Executar
 
 ### Copie o trecho abaixo e execute no Powershell como administrador
@@ -201,7 +202,6 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/hardening-windows-desktop.ps1 -OutFile hardening-windows-desktop.ps1
 .\hardening-windows-desktop.ps1
 
----
 
 ## ☄️ Como Desfazer
 
@@ -212,3 +212,5 @@ cd $env:USERPROFILE\Downloads
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/unhardening-windows-desktop.ps1 -OutFile unhardening-windows-desktop.ps1
 .\unhardening-windows-desktop.ps1
+
+
