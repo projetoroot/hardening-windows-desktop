@@ -47,7 +47,7 @@ Write-Host "Hardening Windows Desktop - 25 ITENS CRITICOS" -ForegroundColor Gree
 # PERMITE SAIDA: Acesso a \\servidor\share continua funcionando normalmente
 netsh advfirewall set allprofiles state on | Out-Null
 netsh advfirewall firewall add rule name="SMBBlock445" dir=in action=block protocol=TCP localport=445 | Out-Null
-"1. Firewall + SMB 445 OK" | Out-File $log -Append
+"1. Firewall + SMB 445 - OK" | Out-File $log -Append
 
 # =============================================================================
 # 2. NTLMv2 OBRIGATORIO - LmCompatibilityLevel=5
@@ -56,7 +56,7 @@ netsh advfirewall firewall add rule name="SMBBlock445" dir=in action=block proto
 # NIVEIS: 0=LM+NTLMv1, 3=NTLMv1 apenas, 5=NTLMv2/Kerberos OBRIGATORIO (CIS L1)
 # PROTEGE CONTRA: Pass-the-hash, Responder.py NTLM relay, rainbow tables offline
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LmCompatibilityLevel" -Value 5 -PropertyType DWORD -Force | Out-Null
-"2. NTLMv2 Obrigatorio OK" | Out-File $log -Append
+"2. NTLMv2 Obrigatorio - OK" | Out-File $log -Append
 
 # =============================================================================
 # 3. WDIGEST DESABILITADO - UseLogonCredential=0
@@ -66,7 +66,7 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LmCom
 # DEPOIS: "No credentials found" - apenas hashes NTLM (muito mais dificeis)
 # PROTEGE CONTRA: ProcDump lsass.exe, comsvcs.dll minidump, TaskMgr tricks
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" -Name "UseLogonCredential" -Value 0 -PropertyType DWORD -Force | Out-Null
-"3. WDigest OFF (Anti-Mimikatz) OK" | Out-File $log -Append
+"3. WDigest OFF (Anti-Mimikatz) - OK" | Out-File $log -Append
 
 # =============================================================================
 # 4. LLMNR DESABILITADO - EnableMulticast=0
@@ -75,7 +75,7 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders
 # ATAQUE TIPICO: Responder.py responde "*.local" → IP 192.168.1.100 malicioso → SMB phishing
 # DEPOIS: Apenas DNS legitimo funciona (sem multicast poisoning .local)
 New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" -Name "EnableMulticast" -Value 0 -PropertyType DWORD -Force | Out-Null
-"4. LLMNR OFF (Anti-Responder) OK" | Out-File $log -Append
+"4. LLMNR OFF (Anti-Responder) - OK" | Out-File $log -Append
 
 # =============================================================================
 # 5. NTLM ANONIMO BLOQUEADO - RestrictAnonymous=1
@@ -84,7 +84,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" 
 # ANTES: rpcclient -U "" enumdomusers = lista completa usuarios dominio
 # DEPOIS: "Access Denied" - sem enumeracao anonima de usuarios/shares
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RestrictAnonymous" -Value 1 -PropertyType DWORD -Force | Out-Null
-"5. NTLM Anonimo OFF OK" | Out-File $log -Append
+"5. NTLM Anonimo OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 6. LSASS PROTECTED PROCESS - RunAsPPL=1
@@ -93,7 +93,7 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "Restr
 # REGRAS PPL: ProcDump, Mimikatz, injecao codigo = Access Denied
 # EXCECAO: Apenas ferramentas Microsoft assinadas (DbgSym, ProcExp assinada)
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RunAsPPL" -Value 1 -PropertyType DWORD -Force | Out-Null
-"6. LSASS PPL (Anti-Dump) OK" | Out-File $log -Append
+"6. LSASS PPL (Anti-Dump) - OK" | Out-File $log -Append
 
 # =============================================================================
 # 7. RDP REMOTO BLOQUEADO - fDenyTSConnections=1
@@ -103,7 +103,7 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RunAs
 # PERMITE SAIDA: Voce pode conectar RDP para outros servidores normalmente
 # BLOQUEIA ENTRADA: Bruteforce, BlueKeep CVE-2019-0708
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 1 -PropertyType DWORD -Force | Out-Null
-"7. RDP Inbound OFF OK" | Out-File $log -Append
+"7. RDP Inbound OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 8. UAC MAXIMO - ConsentPromptBehaviorAdmin=2
@@ -113,7 +113,7 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" 
 # EnableLUA=1 ativa User Account Control completamente (sem bypass Fodhelper)
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 2 -PropertyType DWORD -Force | Out-Null
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLUA" -Value 1 -PropertyType DWORD -Force | Out-Null
-"8. UAC Maximo OK" | Out-File $log -Append
+"8. UAC Maximo - OK" | Out-File $log -Append
 
 # =============================================================================
 # 9. AUTORUN TODOS DRIVES - NoDriveTypeAutoRun=255
@@ -122,7 +122,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies
 # 255 = 11111111b = USB + Fixo + CD-ROM + RAM + Desconhecido + Removivel
 # PROTEGE CONTRA: Stuxnet (autorun.inf), Conficker (USB worm), malwares fisicos
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 255 -PropertyType DWORD -Force | Out-Null
-"9. Autorun Todos Drives OFF OK" | Out-File $log -Append
+"9. Autorun Todos Drives OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 10. CONTA GUEST DESABILITADA
@@ -131,7 +131,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies
 # RISCO: Guest = acesso local sem autenticacao (Physical access = root)
 # USO COMUM: PCs publicos, bibliotecas, quiosques (NAO use em casa/trabalho)
 net user Guest /active:no | Out-Null
-"10. Conta Guest OFF OK" | Out-File $log -Append
+"10. Conta Guest OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 11. AUDITORIA - Event Logs 4624/4625/4688
@@ -142,7 +142,7 @@ net user Guest /active:no | Out-Null
 auditpol /set /subcategory:"Logon" /success:enable /failure:enable | Out-Null
 auditpol /set /subcategory:"Logoff" /success:enable /failure:enable | Out-Null
 auditpol /set /subcategory:"Process Creation" /success:enable /failure:enable | Out-Null
-"11. Auditoria Logon+Processo OK" | Out-File $log -Append
+"11. Auditoria Logon+Processo - OK" | Out-File $log -Append
 
 # =============================================================================
 # 12. POWERSHELL SCRIPTBLOCK LOGGING - Event 4104
@@ -153,7 +153,7 @@ auditpol /set /subcategory:"Process Creation" /success:enable /failure:enable | 
 $path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
 if (!(Test-Path $path)) { New-Item -Path $path -Force | Out-Null }
 New-ItemProperty -Path $path -Name "EnableScriptBlockLogging" -Value 1 -PropertyType DWORD -Force | Out-Null
-"12. PowerShell ScriptBlock OK" | Out-File $log -Append
+"12. PowerShell ScriptBlock - OK" | Out-File $log -Append
 
 # =============================================================================
 # 13. PROCESS CMDLINE LOGGING - Argumentos completos 4688
@@ -164,7 +164,7 @@ New-ItemProperty -Path $path -Name "EnableScriptBlockLogging" -Value 1 -Property
 $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit"
 if (!(Test-Path $path)) { New-Item -Path $path -Force | Out-Null }
 New-ItemProperty -Path $path -Name "ProcessCreationIncludeCmdLine_Enabled" -Value 1 -PropertyType DWORD -Force | Out-Null
-"13. Cmdline Logging Completo OK" | Out-File $log -Append
+"13. Cmdline Logging Completo - OK" | Out-File $log -Append
 
 # =============================================================================
 # 14. REMOTEREGISTRY OFF - Start=4 (Disabled)
@@ -173,7 +173,7 @@ New-ItemProperty -Path $path -Name "ProcessCreationIncludeCmdLine_Enabled" -Valu
 # VALOR 4=Disabled (0=Boot, 1=System, 2=Auto, 3=Manual, 4=Disabled)
 # PROTEGE CONTRA: PrintNightmare variantes, registry RCE via RDP
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\RemoteRegistry" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"14. RemoteRegistry OFF OK" | Out-File $log -Append
+"14. RemoteRegistry OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 15. WEBCLIENT OFF - WebDAV exploits (Start=4)
@@ -181,7 +181,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\RemoteRegistry" /v Start /t REG_
 # FINALIDADE: Desabilita WebDAV client (\\192.168.1.1@80\DavWWWRoot)
 # RISCO: WebDAV usado em phishing (fake shares), exploits UNC path
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\WebClient" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"15. WebClient OFF OK" | Out-File $log -Append
+"15. WebClient OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 16. PRINTSPOOLER OFF - PrintNightmare CVE-2021-34527 (Start=4)
@@ -190,7 +190,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\WebClient" /v Start /t REG_DWORD
 # RISCO: PrintNightmare permite RCE sem autenticacao via spooler RPC
 # NOTA: Impressao local USB continua funcionando normalmente
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Spooler" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"16. PrintSpooler OFF OK" | Out-File $log -Append
+"16. PrintSpooler OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 17. SERVER SERVICE OFF - SMB inseguro (Start=4)
@@ -199,7 +199,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\Spooler" /v Start /t REG_DWORD /
 # RISCO: Server service expõe shares anonimos em algumas configs
 # PERMITE: File sharing via Group Policy ou permissoes especificas
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"17. Server Service OFF OK" | Out-File $log -Append
+"17. Server Service OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 18. WINDOWS SEARCH OFF - WSearch vulneravel (Start=4)
@@ -208,7 +208,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer" /v Start /t REG_DW
 # RISCO: WSearch tinha multiplas CVEs (elevation privilege local)
 # NOTA: Busca Windows Explorer fica mais lenta (mas mais segura)
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\WSearch" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"18. Windows Search OFF OK" | Out-File $log -Append
+"18. Windows Search OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 19. BITS OFF - Background Intelligent Transfer (Start=4)
@@ -217,7 +217,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\WSearch" /v Start /t REG_DWORD /
 # RISCO: BITS roda com SYSTEM e ignora firewall/proxy para downloads
 # EXEMPLO: Emotet, TrickBot usam BITS para C2 e payload download
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\BITS" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"19. BITS OFF OK" | Out-File $log -Append
+"19. BITS OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 20. TELNET SERVER OFF - Protocolo inseguro plaintext (Start=4)
@@ -226,7 +226,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\BITS" /v Start /t REG_DWORD /d 4
 # RISCO: Telnet = plaintext (senhas visiveis em Wireshark)
 # NOTA: Telnet client tambem deve ser removido (OpcionalFeature)
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\TlntSvr" /v Start /t REG_DWORD /d 4 /f | Out-Null
-"20. Telnet OFF OK" | Out-File $log -Append
+"20. Telnet OFF - OK" | Out-File $log -Append
 
 # =============================================================================
 # 21. DEFENDER ASR - BLOQUEIO DE EXECUCAO WEB / OFFICE 
@@ -271,7 +271,7 @@ Set-ItemProperty `
 -Name "SmartScreenEnabled" `
 -Value "RequireAdmin"
 
-"23. SmartScreen forçado - OK" | Out-File $log -Append
+"23. SmartScreen forcado - OK" | Out-File $log -Append
 
 # =============================================================================
 # 24. SOFTWARE RESTRICTION POLICY - BLOQUEIO TEMP E DOWNLOADS
@@ -325,16 +325,16 @@ Set-ItemProperty `
 # Testa conectividade com a internet
 Write-Host "`nVerificando internet..." -ForegroundColor Cyan
 if (Test-Connection -ComputerName google.com -Count 2 -Quiet) {
-    Write-Host "Conexão OK" -ForegroundColor Green
-    "$((Get-Date)) - Conexão OK" | Out-File $log -Append
+    Write-Host "Teste de Internet - OK" -ForegroundColor Green
+    "$((Get-Date)) - Teste de Internet - OK" | Out-File $log -Append
 } else {
-    Write-Host "Sem conexão com a internet" -ForegroundColor Red
-    "$((Get-Date)) - Sem conexão com a internet" | Out-File $log -Append
+    Write-Host "Sem conexao com a internet" -ForegroundColor Red
+    "$((Get-Date)) - Sem conexao com a internet" | Out-File $log -Append
 }
 
 # Agenda reinício em 60 segundos
 Write-Host "`nReiniciando em 60 segundos..." -ForegroundColor Red
-"$((Get-Date)) - Reinício agendado em 60 segundos" | Out-File $log -Append
+"$((Get-Date)) - Reinicio agendado em 60 segundos (Feche e salve todos os arquivos abertos)" | Out-File $log -Append
 shutdown /r /t 60
 
 # Abre o log no final
