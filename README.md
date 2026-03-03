@@ -196,9 +196,17 @@ Este manual permite auditoria técnica e pontuação objetiva do nível de harde
 
 ### Copie o trecho abaixo e execute no Powershell como administrador
 
-```powershell
-cd $env:USERPROFILE\Downloads
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/hardening-windows-desktop.ps1 -OutFile hardening-windows-desktop.ps1
-.\hardening-windows-desktop.ps1
+    cd $env:USERPROFILE\Downloads
+    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+    Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/hardening-windows-desktop.ps1 -OutFile hardening-windows-desktop.ps1
+    .\hardening-windows-desktop.ps1
 
+--- 
+## ☄️ Como Desfazer (REMOVER hardening)
+
+### Copie o trecho abaixo e execute no Powershell como administrador (vai executar um script perguntando quais itens quer remover)
+
+    cd $env:USERPROFILE\Downloads
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/unhardening-windows-desktop.ps1 -OutFile unhardening-windows-desktop.ps1
+    .\unhardening-windows-desktop.ps1
