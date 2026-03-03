@@ -1,3 +1,5 @@
+![CIS Compliance](https://img.shields.io/badge/CIS_Level_1-Partial_Compliance-yellow)
+
 # 🛡️ Hardening Windows Desktop
 
 Script em PowerShell para aplicação de hardening em Windows 10 e Windows 11, com foco em ambientes corporativos que não utilizam Active Directory como base para GPO.
@@ -121,10 +123,41 @@ Previne:
 - Execução como Administrador
 
 ---
+## 📊 Controles Implementados com Criticidade e Peso
+
+
+| Área        | Controle CIS     | Descrição                              | Criticidade | Implementado |  Peso |
+|------------|------------------|----------------------------------------|-------------|--------------|--------|
+| NTLM       | 2.3.10.x         | Restrição de NTLM inbound              | Alta        | Sim          | 10     |
+| LSA        | 18.8.21.5        | LSASS como Protected Process           | Alta        | Sim          | 10     |
+| TLS        | 18.9.1.1         | Desabilitar TLS 1.0                    | Alta        | Sim          | 8      |
+| TLS        | 18.9.1.2         | Desabilitar TLS 1.1                    | Alta        | Sim          | 8      |
+| SMB        | 18.9.84.1        | Assinatura SMB Cliente                 | Alta        | Sim          | 9      |
+| SMB        | 18.9.84.2        | Assinatura SMB Servidor                | Alta        | Sim          | 9      |
+| PowerShell | 18.10.7.1        | Remover PowerShell v2                  | Média       | Sim          | 6      |
+| Defender   | 18.9.45.x        | Attack Surface Reduction               | Alta        | Sim          | 10     |
+| Firewall   | 9.x              | Restringir regras inbound              | Média       | Sim          | 6      |
+| Auditoria  | 17.3.1           | Auditoria de Logon                     | Média       | Sim          | 5      |
+| Auditoria  | 17.6.x           | Auditoria de Gerenciamento de Conta    | Média       | Sim          | 5      |
+
+### Score Máximo: 86 pontos
+
+Score (%) = (Soma dos Controles Conformes / 86) x 100
+
+### Classificação
+
+| Percentual | Nível |
+|------------|-------|
+| 90% - 100% | Hardened |
+| 75% - 89%  | Good Baseline |
+| 50% - 74%  | Moderate |
+| < 50%      | Weak |
+
+---
 
 ## 🚀 Como Executar
 
-### Baixar o Script
+### Copie o trecho abaixo e execute no Powershell como administrador
 
 ```powershell
 cd $env:USERPROFILE\Downloads
