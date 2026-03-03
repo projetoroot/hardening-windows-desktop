@@ -181,7 +181,7 @@ Avaliar impacto antes de aplicar em produção.
 
 # 🚀 Resultado Esperado
 
-Aplicando os 20 controles:
+Aplicando os 25 controles:
 
 - Redução relevante da superfície de ataque
 - Maior proteção contra roubo de credenciais
