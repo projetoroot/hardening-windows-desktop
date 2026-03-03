@@ -202,8 +202,9 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/projetoroot/hardening-windows-desktop/refs/heads/main/hardening-windows-desktop.ps1 -OutFile hardening-windows-desktop.ps1
 .\hardening-windows-desktop.ps1
 
+---
 
-## ☄️ Como Desfazer
+# ☄️ Como Desfazer
 
 ### Copie o trecho abaixo e execute no Powershell como administrador
 
