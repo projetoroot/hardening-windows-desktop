@@ -17,6 +17,19 @@
 #           proteção de credenciais e eventos de auditoria.
 ###############################################################################
 
+# ---- Valores possíveis do campo Start ---
+# Valor	Significado	  Comportamento
+#  0	Boot	      Carrega no início do kernel
+#  1	System	      Carrega durante inicialização do sistema
+#  2	Automatic	  Serviço inicia automaticamente
+#  3	Manual	      Inicia somente quando solicitado
+#  4	Disabled	  Serviço não pode iniciar
+
+# --- Sempre vale verificar a documentação da chave --- 
+# Valor	 Interpretação
+# 0	     Desativado
+# 1	     Ativado
+# 2+	 Configuração específica da chave
 
 $ErrorActionPreference = "SilentlyContinue"
 
