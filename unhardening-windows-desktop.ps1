@@ -177,33 +177,15 @@ function ReverterGuest {
 
 function ReverterAuditoria {
 
-    Write-Host "Revertendo auditoria via policy..." -ForegroundColor Yellow
-    Log "Inicio reversao auditoria"
+    Write-Host "Revertendo auditoria (reset completo do sistema)..." -ForegroundColor Yellow
+    Log "Reset completo de auditoria iniciado"
 
-    try {
+    Start-Process -FilePath "secedit.exe" `
+        -ArgumentList "/configure /cfg $env:windir\inf\defltbase.inf /db reset.sdb /quiet" `
+        -Wait
 
-        # Remove configuração de auditoria avançada
-        $base = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Audit"
-
-        if (Test-Path $base) {
-            Remove-Item $base -Recurse -Force -ErrorAction SilentlyContinue
-        }
-
-        # Força Windows voltar para modo básico
-        Set-ItemProperty `
-        -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
-        -Name "SCENoApplyLegacyAuditPolicy" `
-        -Value 1 -Type DWord
-
-        Write-Host "Policy resetada" -ForegroundColor Green
-        Log "Policy de auditoria removida"
-
-    } catch {
-        Write-Host "Erro ao remover policy" -ForegroundColor Red
-        Log "Erro ao remover policy"
-    }
+    Log "Reset de politica concluido"
 }
-
 function ReverterPSLogging {
     if (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging") {
         Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" `
