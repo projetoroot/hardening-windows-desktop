@@ -29,7 +29,6 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     pause
     exit
 }
-}
 
 # Cria pasta/log
 if (!(Test-Path "C:\temp")) { New-Item "C:\temp" -ItemType Directory }
