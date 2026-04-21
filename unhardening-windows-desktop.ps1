@@ -177,15 +177,18 @@ function ReverterGuest {
 
 function ReverterAuditoria {
 
-    Write-Host "Revertendo auditoria (reset completo do sistema)..." -ForegroundColor Yellow
-    Log "Reset completo de auditoria iniciado"
+    Write-Host "Resetando politica de auditoria..." -ForegroundColor Yellow
+    Log "Reset auditoria via secedit"
 
-    Start-Process -FilePath "secedit.exe" `
-        -ArgumentList "/configure /cfg $env:windir\inf\defltbase.inf /db reset.sdb /quiet" `
-        -Wait
+    $db = "$env:windir\security\database\reset_audit.sdb"
 
-    Log "Reset de politica concluido"
+    Start-Process secedit.exe `
+    -ArgumentList "/configure /cfg $env:windir\inf\defltbase.inf /db $db /quiet" `
+    -Wait
+
+    Log "Auditoria resetada com sucesso"
 }
+
 function ReverterPSLogging {
     if (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging") {
         Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" `
