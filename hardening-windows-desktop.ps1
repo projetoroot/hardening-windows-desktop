@@ -265,11 +265,18 @@ foreach ($rule in $asrRules) {
 # FINALIDADE: Garante que arquivos baixados mantenham identificacao de zona Internet
 # RISCO: Sem MOTW, arquivos HTML/LNK podem executar sem restricoes adicionais
 # NOTA: Funciona em conjunto com SmartScreen e ASR
-New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" -Force | Out-Null
-Set-ItemProperty `
--Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" `
--Name "SaveZoneInformation" `
--Value 1 -Type DWord
+$asrRules = @(
+"D4F940AB-401B-4EFC-AADC-AD5F3C50688A", # Web
+"3B576869-A4EC-4529-8536-B80A7769E899", # Office child
+"BE9BA2D9-53EA-4CDC-84E5-9B1EEEE46550", # Email/Webmail
+"5BEB7EFE-FD9A-4556-801D-275E5FFC04CC"  # Scripts ofuscados
+)
+
+foreach ($rule in $asrRules) {
+    Add-MpPreference -AttackSurfaceReductionRules_Ids $rule `
+    -AttackSurfaceReductionRules_Actions Enabled
+}
+"21. ASR aplicado (manual) - OK" | Out-File $log -Append
 
 "22. MOTW ativo - OK" | Out-File $log -Append
 
@@ -298,20 +305,25 @@ New-Item -Path $base -Force | Out-Null
 New-ItemProperty -Path $base -Name "DefaultLevel" -Value 0x40000 -PropertyType DWord -Force | Out-Null
 New-ItemProperty -Path $base -Name "PolicyScope" -Value 0 -PropertyType DWord -Force | Out-Null
 
+$extensions = @("exe","bat","cmd","ps1")
+
 $paths = @(
-"$env:USERPROFILE\Downloads\*",
-"$env:USERPROFILE\AppData\Local\Temp\*"
+"$env:USERPROFILE\Downloads",
+"$env:USERPROFILE\AppData\Local\Temp"
 )
 
 foreach ($p in $paths) {
-    $guid = [guid]::NewGuid().ToString()
-    $rulePath = "$base\0\Paths\$guid"
-    New-Item -Path $rulePath -Force | Out-Null
-    New-ItemProperty -Path $rulePath -Name "ItemData" -Value $p -PropertyType String -Force | Out-Null
-    New-ItemProperty -Path $rulePath -Name "SaferFlags" -Value 0 -PropertyType DWord -Force | Out-Null
+    foreach ($ext in $extensions) {
+        $guid = [guid]::NewGuid().ToString()
+        $rulePath = "$base\0\Paths\$guid"
+
+        New-Item -Path $rulePath -Force | Out-Null
+        New-ItemProperty -Path $rulePath -Name "ItemData" -Value "$p\*.$ext" -PropertyType String -Force | Out-Null
+        New-ItemProperty -Path $rulePath -Name "SaferFlags" -Value 0 -PropertyType DWord -Force | Out-Null
+    }
 }
 
-"24. SRP aplicado - OK" | Out-File $log -Append
+"24. SRP aplicado (granular - manual) - OK" | Out-File $log -Append
 
 # =============================================================================
 # 25. WINDOWS UPDATE AUTOMATICO
