@@ -178,15 +178,39 @@ function ReverterGuest {
 function ReverterAuditoria {
 
     Write-Host "Resetando politica de auditoria..." -ForegroundColor Yellow
-    Log "Reset auditoria via secedit"
+    Log "Inicio reset auditoria"
 
-    $db = "$env:windir\security\database\reset_audit.sdb"
+    $dbPath = "$env:windir\security\database\reset_audit.sdb"
+    $jfmPath = "$env:windir\security\database\reset_audit.jfm"
 
-    Start-Process secedit.exe `
-    -ArgumentList "/configure /cfg $env:windir\inf\defltbase.inf /db $db /quiet" `
-    -Wait
+    try {
 
-    Log "Auditoria resetada com sucesso"
+        Start-Process secedit.exe `
+        -ArgumentList "/configure /cfg $env:windir\inf\defltbase.inf /db $dbPath /quiet" `
+        -Wait
+
+        Write-Host "Reset concluido" -ForegroundColor Green
+        Log "Secedit executado com sucesso"
+
+    } catch {
+        Write-Host "Erro no secedit" -ForegroundColor Red
+        Log "Erro ao executar secedit"
+    }
+
+    # Limpeza
+    Start-Sleep 2
+
+    if (Test-Path $dbPath) {
+        Remove-Item $dbPath -Force -ErrorAction SilentlyContinue
+        Log "Arquivo SDB removido"
+    }
+
+    if (Test-Path $jfmPath) {
+        Remove-Item $jfmPath -Force -ErrorAction SilentlyContinue
+        Log "Arquivo JFM removido"
+    }
+
+    Write-Host "Limpeza concluida" -ForegroundColor Cyan
 }
 
 function ReverterPSLogging {
