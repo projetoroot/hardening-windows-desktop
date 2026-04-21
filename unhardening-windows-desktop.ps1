@@ -176,9 +176,11 @@ function ReverterGuest {
 }
 
 function ReverterAuditoria {
+
     try {
+        secedit /configure /cfg "$env:windir\inf\defltbase.inf" /db defltbase.sdb /quiet | Out-Null
         auditpol /clear | Out-Null
-        Log "Auditoria resetada (auditpol /clear)"
+        Log "Auditoria resetada via secedit + auditpol"
     } catch {
         Log "Erro ao resetar auditoria"
     }
