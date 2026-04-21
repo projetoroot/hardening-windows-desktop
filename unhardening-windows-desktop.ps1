@@ -176,18 +176,12 @@ function ReverterGuest {
 }
 
 function ReverterAuditoria {
-
-    $subcats = auditpol /list /subcategory
-    if ($subcats -match "Logon") {
-        auditpol /set /subcategory:"Logon" /success:disable /failure:disable | Out-Null
+    try {
+        auditpol /clear | Out-Null
+        Log "Auditoria resetada (auditpol /clear)"
+    } catch {
+        Log "Erro ao resetar auditoria"
     }
-    if ($subcats -match "Logoff") {
-        auditpol /set /subcategory:"Logoff" /success:disable /failure:disable | Out-Null
-    }
-    if ($subcats -match "Process Creation") {
-        auditpol /set /subcategory:"Process Creation" /success:disable /failure:disable | Out-Null
-    }
-    Log "Auditoria desativada (auto-detect)"
 }
 
 function ReverterPSLogging {
