@@ -248,24 +248,6 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\TlntSvr" /v Start /t REG_DWORD /
 # RISCO: Exploits HTML, LNK e payload Office podem executar codigo sem aviso
 # NOTA: Pode impactar macros e automacoes corporativas
 $asrRules = @(
-"D4F940AB-401B-4EFC-AADC-AD5F3C50688A",
-"75668C1F-73B5-4CF0-BB93-3ECF5CB7CC84",
-"3B576869-A4EC-4529-8536-B80A7769E899"
-)
-
-foreach ($rule in $asrRules) {
-    Add-MpPreference -AttackSurfaceReductionRules_Ids $rule -AttackSurfaceReductionRules_Actions Enabled
-}
-
-"21. ASR aplicado - OK" | Out-File $log -Append
-
-# =============================================================================
-# 22. MARK OF THE WEB FORCADO (SaveZoneInformation=1)
-# =============================================================================
-# FINALIDADE: Garante que arquivos baixados mantenham identificacao de zona Internet
-# RISCO: Sem MOTW, arquivos HTML/LNK podem executar sem restricoes adicionais
-# NOTA: Funciona em conjunto com SmartScreen e ASR
-$asrRules = @(
 "D4F940AB-401B-4EFC-AADC-AD5F3C50688A", # Web
 "3B576869-A4EC-4529-8536-B80A7769E899", # Office child
 "BE9BA2D9-53EA-4CDC-84E5-9B1EEEE46550", # Email/Webmail
@@ -276,7 +258,20 @@ foreach ($rule in $asrRules) {
     Add-MpPreference -AttackSurfaceReductionRules_Ids $rule `
     -AttackSurfaceReductionRules_Actions Enabled
 }
+
 "21. ASR aplicado (manual) - OK" | Out-File $log -Append
+
+# =============================================================================
+# 22. MARK OF THE WEB FORCADO (SaveZoneInformation=1)
+# =============================================================================
+# FINALIDADE: Garante que arquivos baixados mantenham identificacao de zona Internet
+# RISCO: Sem MOTW, arquivos HTML/LNK podem executar sem restricoes adicionais
+# NOTA: Funciona em conjunto com SmartScreen e ASR
+New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" -Force | Out-Null
+Set-ItemProperty `
+-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" `
+-Name "SaveZoneInformation" `
+-Value 1 -Type DWord
 
 "22. MOTW ativo - OK" | Out-File $log -Append
 
