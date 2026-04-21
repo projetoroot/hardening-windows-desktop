@@ -165,15 +165,29 @@ function ReverterAutorun {
 }
 
 function ReverterGuest {
-    net user Guest /active:yes | Out-Null
-    Log "Guest ativado"
+    $guest = Get-LocalUser | Where-Object { $_.SID -like "*-501" }
+
+    if ($guest) {
+        Enable-LocalUser -Name $guest.Name
+        Log "Guest ativado ($($guest.Name))"
+    } else {
+        Log "Conta Guest não encontrada"
+    }
 }
 
 function ReverterAuditoria {
-    auditpol /set /subcategory:"Logon" /success:disable /failure:disable | Out-Null
-    auditpol /set /subcategory:"Logoff" /success:disable /failure:disable | Out-Null
-    auditpol /set /subcategory:"Process Creation" /success:disable /failure:disable | Out-Null
-    Log "Auditoria desativada"
+
+    $subcats = auditpol /list /subcategory
+    if ($subcats -match "Logon") {
+        auditpol /set /subcategory:"Logon" /success:disable /failure:disable | Out-Null
+    }
+    if ($subcats -match "Logoff") {
+        auditpol /set /subcategory:"Logoff" /success:disable /failure:disable | Out-Null
+    }
+    if ($subcats -match "Process Creation") {
+        auditpol /set /subcategory:"Process Creation" /success:disable /failure:disable | Out-Null
+    }
+    Log "Auditoria desativada (auto-detect)"
 }
 
 function ReverterPSLogging {
