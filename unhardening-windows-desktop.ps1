@@ -177,24 +177,30 @@ function ReverterGuest {
 
 function ReverterAuditoria {
 
-    Write-Host "Revertendo auditoria..." -ForegroundColor Yellow
+    Write-Host "Revertendo auditoria via policy..." -ForegroundColor Yellow
     Log "Inicio reversao auditoria"
 
     try {
 
-        auditpol /get /category:* | ForEach-Object {
-            if ($_ -match "Logon|Logoff|Process") {
-                $name = ($_ -split "  ")[0].Trim()
-                auditpol /set /subcategory:"$name" /success:disable /failure:disable | Out-Null
-            }
+        # Remove configuração de auditoria avançada
+        $base = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Audit"
+
+        if (Test-Path $base) {
+            Remove-Item $base -Recurse -Force -ErrorAction SilentlyContinue
         }
 
-        Write-Host "Auditoria revertida" -ForegroundColor Green
-        Log "Auditoria revertida dinamicamente"
+        # Força Windows voltar para modo básico
+        Set-ItemProperty `
+        -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
+        -Name "SCENoApplyLegacyAuditPolicy" `
+        -Value 1 -Type DWord
+
+        Write-Host "Policy resetada" -ForegroundColor Green
+        Log "Policy de auditoria removida"
 
     } catch {
-        Write-Host "Erro ao reverter auditoria" -ForegroundColor Red
-        Log "Erro na reversao auditoria"
+        Write-Host "Erro ao remover policy" -ForegroundColor Red
+        Log "Erro ao remover policy"
     }
 }
 
