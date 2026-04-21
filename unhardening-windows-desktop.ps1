@@ -177,9 +177,43 @@ function ReverterGuest {
 
 function ReverterAuditoria {
 
-    auditpol /clear | Out-Null
+    Write-Host "Revertendo auditoria..." -ForegroundColor Yellow
+    Log "Inicio reversao auditoria"
 
-    Log "Auditoria resetada para padrão do Windows"
+    try {
+
+        # Primeiro tenta direto (mais rapido)
+        auditpol /clear | Out-Null
+
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Auditpol OK" -ForegroundColor Green
+            Log "Auditpol resetado com sucesso"
+            return
+        }
+
+        # Se falhar, usa secedit (mais pesado)
+        Write-Host "Fallback: aplicando baseline (pode demorar...)" -ForegroundColor Cyan
+        Log "Auditpol falhou, usando secedit"
+
+        $job = Start-Job {
+            secedit /configure /cfg "$env:windir\inf\defltbase.inf" /db defltbase.sdb /quiet
+        }
+
+        # Aguarda no max 60 segundos
+        if (Wait-Job $job -Timeout 60) {
+            Receive-Job $job | Out-Null
+            Write-Host "Baseline aplicada" -ForegroundColor Green
+            Log "Secedit aplicado com sucesso"
+        } else {
+            Stop-Job $job
+            Write-Host "Timeout no secedit (ignorado)" -ForegroundColor Red
+            Log "Timeout no secedit"
+        }
+
+    } catch {
+        Write-Host "Erro ao reverter auditoria" -ForegroundColor Red
+        Log "Erro na reversao auditoria"
+    }
 }
 
 function ReverterPSLogging {
