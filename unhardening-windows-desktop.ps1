@@ -24,12 +24,11 @@ $ErrorActionPreference = "SilentlyContinue"
 $log = "C:\temp\hardening_reversao.txt"
 
 # Verifica admin
-if (-NOT ([Security.Principal.WindowsPrincipal] 
-[Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
-[Security.Principal.WindowsBuiltInRole] "Administrator")) {
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "EXECUTE COMO ADMINISTRADOR" -ForegroundColor Red
     pause
     exit
+}
 }
 
 # Cria pasta/log
