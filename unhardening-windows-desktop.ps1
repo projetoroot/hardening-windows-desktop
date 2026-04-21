@@ -16,6 +16,7 @@
 # em: https://github.com/projetoroot/hardening-windows-desktop
 # Para reverter digite os numeros dos itens a desfazer (separados por virgula ou intervalos 1-3)
 ####################################################################################################
+
 ###############################################################################
 # REVERSAO PERSONALIZADA - HARDENING WINDOWS
 ###############################################################################
@@ -24,32 +25,34 @@ $ErrorActionPreference = "SilentlyContinue"
 $log = "C:\temp\hardening_reversao.txt"
 
 # Verifica admin
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+if (-not ([Security.Principal.WindowsPrincipal] `
+[Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
+[Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "EXECUTE COMO ADMINISTRADOR" -ForegroundColor Red
     pause
     exit
 }
 
 # Cria pasta/log
-if (!(Test-Path "C:\temp")) { New-Item "C:\temp" -ItemType Directory }
+if (!(Test-Path "C:\temp")) { New-Item "C:\temp" -ItemType Directory | Out-Null }
 "==== INICIO REVERSAO $(Get-Date) ====" | Out-File $log
 
 Clear-Host
 
 # =========================
-# LISTA DE ITENS
+# MENU
 # =========================
 $menu = @{
-1  = "Firewall + Bloqueio SMB 445"
-2  = "NTLMv2 Obrigatorio"
+1  = "Firewall + SMB"
+2  = "NTLM"
 3  = "WDigest"
 4  = "LLMNR"
 5  = "RestrictAnonymous"
 6  = "LSASS PPL"
-7  = "RDP Bloqueado"
-8  = "UAC Maximo"
+7  = "RDP"
+8  = "UAC"
 9  = "Autorun"
-10 = "Conta Guest"
+10 = "Guest"
 11 = "Auditoria"
 12 = "PowerShell Logging"
 13 = "CmdLine Logging"
@@ -60,7 +63,7 @@ $menu = @{
 18 = "Windows Search"
 19 = "BITS"
 20 = "Telnet"
-21 = "ASR Defender"
+21 = "ASR"
 22 = "MOTW"
 23 = "SmartScreen"
 24 = "SRP"
@@ -73,26 +76,23 @@ $menu.GetEnumerator() | Sort-Object Name | ForEach-Object {
 }
 
 Write-Host ""
-Write-Host "Digite exemplo: 1-5,8,10,23 ou ALL" -ForegroundColor Yellow
-
+Write-Host "Digite: 1-5,8,10 ou ALL" -ForegroundColor Yellow
 $inputUser = Read-Host "Selecao"
 
 # =========================
-# PROCESSAMENTO DA ENTRADA
+# PROCESSAMENTO
 # =========================
 $selecionados = @()
 
-if ($inputUser -eq "ALL") {
+if ($inputUser.ToUpper() -eq "ALL") {
     $selecionados = $menu.Keys
 } else {
     $inputUser -split ',' | ForEach-Object {
         if ($_ -match '-') {
-            $range = $_ -split '-'
-            $selecionados += ($range[0]..$range[1])
-        } else {
-            if ($_ -match '^\d+$') {
-                $selecionados += [int]$_
-            }
+            $r = $_ -split '-'
+            $selecionados += ($r[0]..$r[1])
+        } elseif ($_ -match '^\d+$') {
+            $selecionados += [int]$_
         }
     }
 }
@@ -100,80 +100,150 @@ if ($inputUser -eq "ALL") {
 $selecionados = $selecionados | Sort-Object -Unique
 
 # =========================
-# FUNCOES
+# LOG
 # =========================
-
 function Log($msg) {
     "$((Get-Date)) - $msg" | Out-File $log -Append
 }
 
+# =========================
+# FUNCOES
+# =========================
+
 function ReverterFirewall {
-    netsh advfirewall set allprofiles state off
-    netsh advfirewall firewall delete rule name="SMBBlock445"
+    netsh advfirewall set allprofiles state off | Out-Null
+    netsh advfirewall firewall delete rule name="SMBBlock445" | Out-Null
     Log "Firewall revertido"
 }
 
-function ReverterNTLM { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LmCompatibilityLevel" -Value 0; Log "NTLM revertido" }
-function ReverterWDigest { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" -Name "UseLogonCredential" -Value 1; Log "WDigest revertido" }
-function ReverterLLMNR { Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" -Name "EnableMulticast" -Value 1; Log "LLMNR revertido" }
-function ReverterRestrictAnonymous { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RestrictAnonymous" -Value 0; Log "RestrictAnonymous revertido" }
-function ReverterLSASS { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RunAsPPL" -Value 0; Log "LSASS revertido" }
-function ReverterRDP { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0; Log "RDP liberado" }
-function ReverterUAC { Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 5; Log "UAC revertido" }
-function ReverterAutorun { Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 91; Log "Autorun revertido" }
-function ReverterGuest { net user Guest /active:yes; Log "Guest ativado" }
+function ReverterNTLM {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
+    -Name "LmCompatibilityLevel" -Value 3
+    Log "NTLM ajustado para padrão"
+}
+
+function ReverterWDigest {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" `
+    -Name "UseLogonCredential" -Value 1
+    Log "WDigest revertido"
+}
+
+function ReverterLLMNR {
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" `
+    -Name "EnableMulticast" -Value 1
+    Log "LLMNR ativo"
+}
+
+function ReverterRestrictAnonymous {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
+    -Name "RestrictAnonymous" -Value 0
+    Log "RestrictAnonymous revertido"
+}
+
+function ReverterLSASS {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
+    -Name "RunAsPPL" -Value 0
+    Log "LSASS PPL desativado"
+}
+
+function ReverterRDP {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" `
+    -Name "fDenyTSConnections" -Value 0
+    Log "RDP liberado"
+}
+
+function ReverterUAC {
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
+    -Name "ConsentPromptBehaviorAdmin" -Value 5
+    Log "UAC padrão restaurado"
+}
+
+function ReverterAutorun {
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
+    -Name "NoDriveTypeAutoRun" -Value 91
+    Log "Autorun padrão restaurado"
+}
+
+function ReverterGuest {
+    net user Guest /active:yes | Out-Null
+    Log "Guest ativado"
+}
 
 function ReverterAuditoria {
-    auditpol /set /subcategory:"Logon" /success:disable /failure:disable
-    auditpol /set /subcategory:"Process Creation" /success:disable /failure:disable
-    Log "Auditoria revertida"
+    auditpol /set /subcategory:"Logon" /success:disable /failure:disable | Out-Null
+    auditpol /set /subcategory:"Logoff" /success:disable /failure:disable | Out-Null
+    auditpol /set /subcategory:"Process Creation" /success:disable /failure:disable | Out-Null
+    Log "Auditoria desativada"
 }
 
 function ReverterPSLogging {
-    Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging"
-    Log "PS Logging revertido"
+    if (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging") {
+        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" `
+        -Name "EnableScriptBlockLogging" -ErrorAction SilentlyContinue
+    }
+    Log "PS Logging removido"
 }
 
 function ReverterCmdline {
-    Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" -Name "ProcessCreationIncludeCmdLine_Enabled"
-    Log "CmdLine revertido"
+    if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit") {
+        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" `
+        -Name "ProcessCreationIncludeCmdLine_Enabled" -ErrorAction SilentlyContinue
+    }
+    Log "CmdLine logging removido"
 }
 
 function ReverterServico($nome) {
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$nome" -Name "Start" -Value 2
-    Log "$nome revertido"
+    if (Get-Service $nome -ErrorAction SilentlyContinue) {
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$nome" `
+        -Name "Start" -Value 3
+        Log "$nome ajustado para manual"
+    }
 }
 
 function ReverterASR {
-    Remove-MpPreference -AttackSurfaceReductionRules_Ids *
+    $rules = @(
+    "D4F940AB-401B-4EFC-AADC-AD5F3C50688A",
+    "3B576869-A4EC-4529-8536-B80A7769E899",
+    "BE9BA2D9-53EA-4CDC-84E5-9B1EEEE46550",
+    "5BEB7EFE-FD9A-4556-801D-275E5FFC04CC"
+    )
+    foreach ($r in $rules) {
+        Remove-MpPreference -AttackSurfaceReductionRules_Ids $r -ErrorAction SilentlyContinue
+    }
     Log "ASR revertido"
 }
 
 function ReverterMOTW {
-    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" -Name "SaveZoneInformation" -Value 0
-    Log "MOTW revertido"
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments" `
+    -Name "SaveZoneInformation" -Value 2
+    Log "MOTW padrão restaurado"
 }
 
 function ReverterSmartScreen {
-    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "SmartScreenEnabled" -Value "Enabled"
-    Log "SmartScreen revertido"
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" `
+    -Name "SmartScreenEnabled" -Value "Warn"
+    Log "SmartScreen padrão restaurado"
 }
 
 function ReverterSRP {
-    Remove-Item "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Safer\CodeIdentifiers" -Recurse -Force
+    if (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Safer") {
+        Remove-Item "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Safer" -Recurse -Force
+    }
     Log "SRP removido"
 }
 
 function ReverterWU {
-    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 1
-    Log "Windows Update revertido"
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" `
+    -Name "NoAutoUpdate" -Value 0
+    Log "Windows Update automático reativado"
 }
 
 # =========================
 # EXECUCAO
 # =========================
-
 foreach ($item in $selecionados) {
+
+    Write-Host "Revertendo: $($menu[$item])"
 
     switch ($item) {
         1 { ReverterFirewall }
