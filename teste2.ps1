@@ -383,6 +383,63 @@ Write-Host ""
 
 
 # =========================================================
+# Remoção agressiva Xbox / LinkedIn / Jogos
+# =========================================================
+
+$apps = @(
+    "*Xbox*",
+    "*Gaming*",
+    "*GameBar*",
+    "*LinkedIn*",
+    "*Solitaire*"
+)
+
+foreach ($app in $apps) {
+
+    Write-Host "Tentando remover: $app"
+
+    # Remover Appx instalado
+    Get-AppxPackage -AllUsers $app |
+    Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+
+    # Remover provisionado
+    Get-AppxProvisionedPackage -Online |
+    Where-Object {$_.DisplayName -like $app} |
+    Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+}
+
+# =========================================================
+# DESABILITAR CONSUMER EXPERIENCE
+# =========================================================
+
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent" `
+/v DisableWindowsConsumerFeatures `
+/t REG_DWORD `
+/d 1 `
+/f
+
+# =========================================================
+# REMOVER SUGESTÕES MENU INICIAR
+# =========================================================
+
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+/v SystemPaneSuggestionsEnabled `
+/t REG_DWORD `
+/d 0 `
+/f
+
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+/v SilentInstalledAppsEnabled `
+/t REG_DWORD `
+/d 0 `
+/f
+
+Write-Host ""
+Write-Host "Concluído." -ForegroundColor Green
+Write-Host "Reinicie o computador." -ForegroundColor Yellow
+
+
+# =========================================================
 # LIMPEZA COMPONENT STORE
 # =========================================================
 
