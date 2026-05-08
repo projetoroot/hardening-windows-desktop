@@ -339,6 +339,50 @@ if ($IsWindows11) {
 Write-Host ""
 
 # =========================================================
+# Remover Jogos, LinkedIn e Solitaire
+# =========================================================
+
+# Solitaire
+Get-AppxPackage -AllUsers "*Solitaire*" |
+Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+
+Get-AppxProvisionedPackage -Online |
+Where-Object {$_.DisplayName -like "*Solitaire*"} |
+Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+
+
+# LinkedIn
+Get-AppxPackage -AllUsers "*LinkedIn*" |
+Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+
+Get-AppxProvisionedPackage -Online |
+Where-Object {$_.DisplayName -like "*LinkedIn*"} |
+Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+
+
+# Xbox e jogos
+$XboxApps = @(
+    "*Xbox*",
+    "*Gaming*",
+    "*GameBar*"
+)
+
+foreach ($app in $XboxApps) {
+
+    Get-AppxPackage -AllUsers $app |
+    Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+
+    Get-AppxProvisionedPackage -Online |
+    Where-Object {$_.DisplayName -like $app} |
+    Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+}
+
+Write-Host ""
+Write-Host "Remoção concluída." -ForegroundColor Green
+Write-Host ""
+
+
+# =========================================================
 # LIMPEZA COMPONENT STORE
 # =========================================================
 
