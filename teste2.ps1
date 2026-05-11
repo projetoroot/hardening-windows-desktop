@@ -327,6 +327,104 @@ Set-ItemProperty `
 Write-Host ""
 
 # =========================================================
+# WebExperience
+# =========================================================
+
+Get-AppxPackage -AllUsers "*WebExperience*" |
+Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+
+# =========================================================
+# DEFAULT USER
+# Aplicar para novos usuários
+# =========================================================
+
+Write-Host "Configurando perfil padrão..." -ForegroundColor Cyan
+
+reg load HKU\DefaultUser "C:\Users\Default\NTUSER.DAT"
+
+# Desabilitar sugestões
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+/v SilentInstalledAppsEnabled `
+/t REG_DWORD `
+/d 0 `
+/f
+
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+/v SystemPaneSuggestionsEnabled `
+/t REG_DWORD `
+/d 0 `
+/f
+
+# Transparência
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" `
+/v EnableTransparency `
+/t REG_DWORD `
+/d 0 `
+/f
+
+# Efeitos visuais
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" `
+/v VisualFXSetting `
+/t REG_DWORD `
+/d 2 `
+/f
+
+reg unload HKU\DefaultUser
+
+
+# =========================================================
+# WINDOWS 10
+# Ajustes adicionais
+# =========================================================
+
+if (-not $IsWindows11) {
+
+    Write-Host ""
+    Write-Host "Aplicando ajustes Windows 10..." -ForegroundColor Cyan
+    Write-Host ""
+
+    # -----------------------------------------------------
+    # Desabilitar tarefas Customer Experience
+    # -----------------------------------------------------
+
+    Get-ScheduledTask |
+    Where-Object {
+        $_.TaskPath -like "*Customer Experience*"
+    } |
+    Disable-ScheduledTask -ErrorAction SilentlyContinue
+
+    # -----------------------------------------------------
+    # Remover OneDrive
+    # -----------------------------------------------------
+
+    Write-Host "Removendo OneDrive..." -ForegroundColor Cyan
+
+    taskkill /f /im OneDrive.exe `
+    2>$null
+
+    if (Test-Path "$env:SystemRoot\SysWOW64\OneDriveSetup.exe") {
+
+        Start-Process `
+        "$env:SystemRoot\SysWOW64\OneDriveSetup.exe" `
+        "/uninstall" `
+        -Wait
+    }
+
+    # -----------------------------------------------------
+    # Ocultar sugestões/menu iniciar
+    # -----------------------------------------------------
+
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
+    /v Start_TrackProgs `
+    /t REG_DWORD `
+    /d 0 `
+    /f | Out-Null
+
+    Write-Host ""
+}
+
+
+# =========================================================
 # WINDOWS 11
 # =========================================================
 
@@ -464,6 +562,51 @@ Write-Host "Reinicie o computador." -ForegroundColor Yellow
 
 
 # =========================================================
+# WebExperience
+# =========================================================
+
+Get-AppxPackage -AllUsers "*WebExperience*" |
+Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+
+# =========================================================
+# DEFAULT USER
+# Aplicar para novos usuários
+# =========================================================
+
+Write-Host "Configurando perfil padrão..." -ForegroundColor Cyan
+
+reg load HKU\DefaultUser "C:\Users\Default\NTUSER.DAT"
+
+# Desabilitar sugestões
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+/v SilentInstalledAppsEnabled `
+/t REG_DWORD `
+/d 0 `
+/f
+
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+/v SystemPaneSuggestionsEnabled `
+/t REG_DWORD `
+/d 0 `
+/f
+
+# Transparência
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" `
+/v EnableTransparency `
+/t REG_DWORD `
+/d 0 `
+/f
+
+# Efeitos visuais
+reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" `
+/v VisualFXSetting `
+/t REG_DWORD `
+/d 2 `
+/f
+
+reg unload HKU\DefaultUser
+
+# =========================================================
 # LIMPEZA COMPONENT STORE
 # =========================================================
 
@@ -490,6 +633,61 @@ Remove-Item "C:\Windows\Temp\*" `
 -ErrorAction SilentlyContinue
 
 Write-Host ""
+
+# =========================================================
+# WINDOWS 11
+# Ajustes adicionais
+# =========================================================
+
+if ($IsWindows11) {
+
+    Write-Host ""
+    Write-Host "Aplicando ajustes Windows 11..." -ForegroundColor Cyan
+    Write-Host ""
+
+    # -----------------------------------------------------
+    # Desabilitar tarefas Customer Experience
+    # -----------------------------------------------------
+
+    Get-ScheduledTask |
+    Where-Object {
+        $_.TaskPath -like "*Customer Experience*"
+    } |
+    Disable-ScheduledTask -ErrorAction SilentlyContinue
+
+    # -----------------------------------------------------
+    # Remover OneDrive
+    # -----------------------------------------------------
+
+    Write-Host "Removendo OneDrive..." -ForegroundColor Cyan
+
+    taskkill /f /im OneDrive.exe `
+    2>$null
+
+    if (Test-Path "$env:SystemRoot\SysWOW64\OneDriveSetup.exe") {
+
+        Start-Process `
+        "$env:SystemRoot\SysWOW64\OneDriveSetup.exe" `
+        "/uninstall" `
+        -Wait
+    }
+
+    # -----------------------------------------------------
+    # Desabilitar Widgets na barra
+    # -----------------------------------------------------
+
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
+    /v TaskbarDa `
+    /t REG_DWORD `
+    /d 0 `
+    /f | Out-Null
+
+    Write-Host ""
+}
+
+
+
+
 
 # =========================================================
 # FINALIZAÇÃO
