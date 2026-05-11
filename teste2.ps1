@@ -257,6 +257,12 @@ Write-Host ""
 Write-Host "Desabilitando Consumer Experience..." -ForegroundColor Cyan
 
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent" `
+/v DisableConsumerAccountStateContent `
+/t REG_DWORD `
+/d 1 `
+/f
+
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent" `
 /v DisableWindowsConsumerFeatures `
 /t REG_DWORD `
 /d 1 `
@@ -269,6 +275,12 @@ Write-Host ""
 # =========================================================
 
 Write-Host "Desabilitando sugestões..." -ForegroundColor Cyan
+
+reg add "HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start" `
+/v HideRecommendedSection `
+/t REG_DWORD `
+/d 1 `
+/f
 
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
 /v SilentInstalledAppsEnabled `
@@ -418,9 +430,21 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent" `
 /d 1 `
 /f
 
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent" `
+/v DisableConsumerAccountStateContent `
+/t REG_DWORD `
+/d 1 `
+/f
+
 # =========================================================
 # REMOVER SUGESTÕES MENU INICIAR
 # =========================================================
+
+reg add "HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start" `
+/v HideRecommendedSection `
+/t REG_DWORD `
+/d 1 `
+/f
 
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
 /v SystemPaneSuggestionsEnabled `
